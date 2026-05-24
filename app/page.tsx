@@ -37,6 +37,7 @@ export default function Home() {
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
 
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const isInCallRef = useRef<boolean>(false);
   const ringtoneRef = useRef<{ stop: () => void } | null>(null);
@@ -108,6 +109,7 @@ export default function Home() {
 
         setMicrophoneAllowed(true);
         localStreamRef.current = localStream;
+        setLocalStream(localStream);
 
         const { default: Peer } = await import("peerjs");
 
@@ -255,6 +257,7 @@ export default function Home() {
         });
         localStreamRef.current.getTracks().forEach(track => track.stop());
         localStreamRef.current = videoStream;
+        setLocalStream(videoStream);
         streamToSend = videoStream;
       } catch {
         withVideo = false;
@@ -306,6 +309,7 @@ export default function Home() {
         });
         localStreamRef.current.getTracks().forEach(track => track.stop());
         localStreamRef.current = videoStream;
+        setLocalStream(videoStream);
         streamToAnswer = videoStream;
         setIsCameraOff(false);
       } catch {
@@ -369,8 +373,10 @@ export default function Home() {
         try {
           const audioOnly = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
           localStreamRef.current = audioOnly;
+          setLocalStream(audioOnly);
         } catch {
           localStreamRef.current = null;
+          setLocalStream(null);
         }
       }
     }
@@ -444,7 +450,7 @@ export default function Home() {
                 callStatus={callStatus}
                 partnerId={partnerId}
                 remoteStream={remoteStream}
-                localStream={localStreamRef.current}
+                localStream={localStream}
                 isMuted={isMuted}
                 isCameraOff={isCameraOff}
                 hasCamera={hasCamera}

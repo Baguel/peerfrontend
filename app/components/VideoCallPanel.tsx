@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { parsePeerName } from "../lib/utils";
 import type { CallStatus } from "../lib/types";
 
@@ -28,15 +29,26 @@ export default function VideoCallPanel({
   onToggleCamera,
   onEndCall,
 }: VideoCallPanelProps) {
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream]);
+
+  useEffect(() => {
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = localStream;
+    }
+  }, [localStream]);
+
   return (
     <div className="w-full bg-slate-950 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl relative min-h-[420px] aspect-video flex flex-col justify-between group">
       {callStatus === "connected" && remoteStream ? (
         <video
-          ref={(el) => {
-            if (el && remoteStream) {
-              el.srcObject = remoteStream;
-            }
-          }}
+          ref={remoteVideoRef}
           autoPlay
           playsInline
           muted
@@ -63,11 +75,7 @@ export default function VideoCallPanel({
             </div>
           ) : (
             <video
-              ref={(el) => {
-                if (el && localStream) {
-                  el.srcObject = localStream;
-                }
-              }}
+              ref={localVideoRef}
               autoPlay
               playsInline
               muted

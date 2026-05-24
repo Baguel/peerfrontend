@@ -439,9 +439,9 @@ export default function Home() {
             )
           )}
 
-          {callStatus === "connected" && (
+          {/* {callStatus === "connected" && (
             <LiveTranslator isActive={callStatus === "connected"} />
-          )}
+          )} */}
 
           <PeerList
             peers={onlinePeers}

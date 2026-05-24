@@ -6,10 +6,12 @@ import type { CallStatus } from "../lib/types";
 interface AudioCallPanelProps {
   callStatus: CallStatus;
   partnerId: string | null;
+  isMuted: boolean;
+  onToggleMute: () => void;
   onEndCall: () => void;
 }
 
-export default function AudioCallPanel({ callStatus, partnerId, onEndCall }: AudioCallPanelProps) {
+export default function AudioCallPanel({ callStatus, partnerId, isMuted, onToggleMute, onEndCall }: AudioCallPanelProps) {
   return (
     <div className="p-6 bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-2xl shadow-xl border border-indigo-800/30 relative overflow-hidden transition-all duration-300">
       <div className="absolute right-0 top-0 translate-x-1/3 -translate-y-1/3 w-64 h-64 bg-white/5 rounded-full blur-3xl pointer-events-none"></div>
@@ -42,16 +44,38 @@ export default function AudioCallPanel({ callStatus, partnerId, onEndCall }: Aud
           </div>
         </div>
 
-        <button
-          onClick={onEndCall}
-          className="px-6 py-3.5 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white rounded-2xl flex items-center justify-center gap-2 font-bold shadow-lg shadow-red-500/20 hover:scale-105 active:scale-95 transition-all w-full sm:w-auto text-sm cursor-pointer"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-            <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91" />
-            <line x1="23" y1="1" x2="1" y2="23" />
-          </svg>
-          {callStatus === "calling" ? "Annuler" : "Raccrocher"}
-        </button>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <button
+            onClick={onToggleMute}
+            className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${
+              isMuted
+                ? "bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30"
+                : "bg-white/10 text-white border-white/20 hover:bg-white/20"
+            }`}
+            title={isMuted ? "Activer le micro" : "Couper le micro"}
+          >
+            {isMuted ? (
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 9.75L19.5 12m0 0l2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6v9m0-9a3 3 0 116 0v9a3 3 0 11-6 0v-9zm-3 5.625c0 2.923 2.052 5.372 4.875 5.952m0 0v1.875m0-1.875a6.762 6.762 0 005.125 0m0 0v1.875" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+              </svg>
+            )}
+          </button>
+
+          <button
+            onClick={onEndCall}
+            className="flex-1 sm:flex-none px-6 py-3.5 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white rounded-2xl flex items-center justify-center gap-2 font-bold shadow-lg shadow-red-500/20 hover:scale-105 active:scale-95 transition-all text-sm cursor-pointer"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+              <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91" />
+              <line x1="23" y1="1" x2="1" y2="23" />
+            </svg>
+            {callStatus === "calling" ? "Annuler" : "Raccrocher"}
+          </button>
+        </div>
       </div>
     </div>
   );

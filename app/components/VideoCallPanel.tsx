@@ -39,6 +39,7 @@ export default function VideoCallPanel({
           }}
           autoPlay
           playsInline
+          muted
           className="w-full h-full object-cover absolute inset-0 z-0"
         />
       ) : (

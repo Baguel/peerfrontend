@@ -57,13 +57,12 @@ export default function Home() {
 
   useEffect(() => {
     if (remoteAudioRef.current) {
-      if (remoteStream && !isVideoCall) {
-        remoteAudioRef.current.srcObject = remoteStream;
-      } else {
-        remoteAudioRef.current.srcObject = null;
+      remoteAudioRef.current.srcObject = remoteStream;
+      if (remoteStream) {
+        remoteAudioRef.current.play().catch(() => {});
       }
     }
-  }, [remoteStream, isVideoCall]);
+  }, [remoteStream]);
 
   const playIncomingRingtone = () => {
     if (ringtoneRef.current) {
@@ -120,7 +119,28 @@ export default function Home() {
           host: 'peerbackend-0vvx.onrender.com',
           port: 443,
           secure: true,
-          path: '/'
+          path: '/',
+          config: {
+            iceServers: [
+              { urls: 'stun:stun.l.google.com:19302' },
+              { urls: 'stun:stun1.l.google.com:19302' },
+              {
+                urls: 'turn:openrelay.metered.ca:80',
+                username: 'openrelayproject',
+                credential: 'openrelayproject'
+              },
+              {
+                urls: 'turn:openrelay.metered.ca:443',
+                username: 'openrelayproject',
+                credential: 'openrelayproject'
+              },
+              {
+                urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+                username: 'openrelayproject',
+                credential: 'openrelayproject'
+              }
+            ]
+          }
         });
 
         peer.on("open", (id: string) => {
@@ -319,7 +339,15 @@ export default function Home() {
 
   const endCall = () => {
     if (activeCall) {
+      try {
+        activeCall.peerConnection?.getSenders().forEach((sender: RTCRtpSender) => {
+          sender.track?.stop();
+        });
+      } catch {}
       activeCall.close();
+    }
+    if (remoteAudioRef.current) {
+      remoteAudioRef.current.srcObject = null;
     }
     cleanupCallStates();
   };
@@ -428,6 +456,8 @@ export default function Home() {
               <AudioCallPanel
                 callStatus={callStatus}
                 partnerId={partnerId}
+                isMuted={isMuted}
+                onToggleMute={toggleMute}
                 onEndCall={endCall}
               />
             )

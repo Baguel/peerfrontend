@@ -57,9 +57,13 @@ export default function Home() {
 
   useEffect(() => {
     if (remoteAudioRef.current) {
-      remoteAudioRef.current.srcObject = remoteStream;
+      if (remoteStream && !isVideoCall) {
+        remoteAudioRef.current.srcObject = remoteStream;
+      } else {
+        remoteAudioRef.current.srcObject = null;
+      }
     }
-  }, [remoteStream]);
+  }, [remoteStream, isVideoCall]);
 
   const playIncomingRingtone = () => {
     if (ringtoneRef.current) {
@@ -243,7 +247,7 @@ export default function Home() {
     setIsVideoCall(withVideo);
     setPartnerId(targetId);
 
-    const call = peerInstance.call(targetId, streamToSend);
+    const call = peerInstance.call(targetId, streamToSend, { metadata: { video: withVideo } });
     setActiveCall(call);
 
     call.on("stream", (stream: any) => {
@@ -270,48 +274,38 @@ export default function Home() {
     if (!incomingCall || !localStreamRef.current) return;
 
     const call = incomingCall;
+    const callerWantsVideo = call.metadata?.video === true;
 
-    call.answer(localStreamRef.current);
+    let streamToAnswer = localStreamRef.current;
+
+    if (callerWantsVideo && hasCamera) {
+      try {
+        const videoStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 640, height: 480 },
+          audio: true
+        });
+        localStreamRef.current.getTracks().forEach(track => track.stop());
+        localStreamRef.current = videoStream;
+        streamToAnswer = videoStream;
+        setIsCameraOff(false);
+      } catch {
+        setIsCameraOff(true);
+      }
+    }
+
+    call.answer(streamToAnswer);
 
     setIsMuted(false);
-    setIsCameraOff(true);
+    if (!callerWantsVideo || !hasCamera) setIsCameraOff(true);
     setCallStatus("connected");
     setPartnerId(call.peer);
     setActiveCall(call);
     setIncomingCall(null);
+    setIsVideoCall(callerWantsVideo);
     stopIncomingRingtone();
 
-    call.on("stream", async (stream: any) => {
+    call.on("stream", (stream: any) => {
       setRemoteStream(stream);
-      const hasRemoteVideo = stream.getVideoTracks().length > 0;
-      setIsVideoCall(hasRemoteVideo);
-
-      if (hasRemoteVideo && hasCamera) {
-        try {
-          const videoStream = await navigator.mediaDevices.getUserMedia({
-            video: { width: 640, height: 480 },
-            audio: true
-          });
-          localStreamRef.current!.getTracks().forEach(track => track.stop());
-          localStreamRef.current = videoStream;
-          setIsCameraOff(false);
-
-          const senders = call.peerConnection?.getSenders();
-          if (senders) {
-            const videoTrack = videoStream.getVideoTracks()[0];
-            const audioTrack = videoStream.getAudioTracks()[0];
-            for (const sender of senders) {
-              if (sender.track?.kind === "video" && videoTrack) {
-                sender.replaceTrack(videoTrack);
-              } else if (sender.track?.kind === "audio" && audioTrack) {
-                sender.replaceTrack(audioTrack);
-              }
-            }
-          }
-        } catch {
-          setIsCameraOff(true);
-        }
-      }
     });
   };
 
